@@ -1,0 +1,25 @@
+import pandas as pd
+import matplotlib.pylab as plt
+from matplotlib import font_manager,rc
+font_name=font_manager.FontProperties(fname="c:\windows/fonts/malgun.ttf").get_name()
+rc('font',family=font_name)
+
+BCcard = pd.read_csv("C:\data\금융빅데이터공모전_데이터\비씨카드.csv", encoding='CP949')
+# BCcard.info()
+
+BC_sex_amount = pd.DataFrame(columns = ['매출년월', '남자', '여자'])
+
+month = 201901
+
+for i in range(month,month+6):
+    M=BCcard[(BCcard['성별'] == '남') & (BCcard['매출년월'] == i)]['금액'].sum()
+    F=BCcard[(BCcard['성별'] == '여') & (BCcard['매출년월'] == i)]['금액'].sum()
+    BC_sex_amount = BC_sex_amount.append({'매출년월' : i, '남자' : M, '여자' : F}, ignore_index=True)
+
+
+BC_sex_amount[['남자', '여자']].plot(kind = 'line', color = ['blue', 'red'], ls = "--", figsize = (7,7))
+plt.title("월별 남녀 매출액", size=15)
+plt.xlabel("매출년월",size=10)
+plt.ylabel("금액", size=10)
+plt.xticks(BC_sex_amount.index, BC_sex_amount["매출년월"], fontsize=10)
+plt.show()
