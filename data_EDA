@@ -1,1 +1,80 @@
-data <- read.csv()
+library(readr)
+setwd('C:/Users/Jooyeon Kim/Desktop/아이티윌 빅데이터 교육/금융 스터디/금융빅데이터공모전_데이터')
+pop <- read_csv('KT_유동인구.csv')
+code <- read_csv('KT_행정동 코드 데이터.csv')
+use <- read_csv('망고플레이트_사용자 밀집도.csv')
+bc <- read_csv('비씨카드.csv')
+keywd <- read_csv('다음소프트_키워드 버즈추이.csv')
+
+attr(pop, 'spec') <- NULL ; attr(pop, 'problems') <- NULL
+attr(code, 'spec') <- NULL ; attr(code, 'problems') <- NULL
+attr(use, 'spec') <- NULL ; attr(use, 'problems') <- NULL
+attr(bc, 'spec') <- NULL ; attr(bc, 'problems') <- NULL
+attr(keywd, 'spec') <- NULL ; attr(keywd, 'problems') <- NULL
+
+str(pop)
+str(code)
+str(use)
+str(bc)
+str(keywd)
+
+#### 유동인구 ####
+dong <- pop$AMD_CD %>% factor() %>% levels()
+dong
+code$SGG_NM[code$AMD_CD %in% dong] %>% unique() # 11110 = 종로구, 11140 = 중구
+code$AMD_NM[code$AMD_CD %in% dong] %>% unique() # 32개동
+code$AMD_NM[code$SGG_CD == '11110'] %>% unique() # 종로구 17개동
+code$AMD_NM[code$SGG_CD == '11140'] %>% unique() # 중구 15개동
+
+moving <- aggregate(pop$total, list(substr(pop$AMD_CD,1,5), pop$AMD_CD, pop$etl_ymd), sum)
+moving <- as.data.frame(moving)
+class(moving)
+head(moving)
+colnames(moving) <- c('gu',' dong', 'date', 'pop')
+
+ggplot(moving, aes(x = date, y= pop, fill = factor(gu))) +
+  geom_bar(stat = 'identity')
+ggplot(moving, aes(x = factor(gu), y= pop, fill = factor(date))) +
+  geom_bar(stat = 'identity')
+
+ggplot(moving, aes(x = date, y= pop, fill = factor(dong))) +
+  geom_bar(stat = 'identity')
+ggplot(moving, aes(x = factor(dong), y= pop, fill = factor(date))) +
+  geom_bar(stat = 'identity')
+
+#### 키워드 ####
+str(keywd)
+aggregate(keywd$빈도수, list(keywd$키워드), sum)
+aggregate(keywd$빈도수, list(keywd$채널), sum)
+
+keywd %>% tail()
+# 카테고리1 = 구정보
+keywd$카테고리1[keywd$키워드 %in% c('종로', '서촌', '익선동')] <- '종로구' 
+keywd$카테고리1[keywd$키워드 %in% c('을지로', '중구', '힙지로', '중리단길')] <- '중구'
+aggregate(keywd$빈도수, list(keywd$카테고리1), sum)
+
+keywd$카테고리1_num[keywd$키워드 %in% c('종로', '서촌', '익선동')] <- '11110' 
+keywd$카테고리1_num[keywd$키워드 %in% c('을지로', '중구', '힙지로', '중리단길')] <- '11140'
+
+key <- keywd[keywd$채널 != 'ko.total',]
+ggplot(key, aes(x = 카테고리1, y = 빈도수, fill = 채널)) +
+  geom_bar(stat = 'identity')
+
+
+#### 사용자 ####
+str(use)
+summary(use$lat)
+summary(use$long)
+plot(use$lat, use$long)
+
+use$lat %>% as.factor() %>% levels
+use$long %>% as.factor() %>% levels
+
+# 종로구랑 중구로 구별을 해야될 거 같은데 어떻게 해야될지는 모르겠음
+
+ggplot(use, aes(x = wday(as.Date(as.character(use$activity_date), '%Y%m%d'), label = T), y = activity_count / 10000)) +
+  geom_bar(stat= 'identity', position = 'stack')
+
+as.Date(as.character(use$activity_date), '%Y%m%d') %>% head()
+
+#### bc카드 ####
