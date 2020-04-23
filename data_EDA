@@ -20,7 +20,12 @@ str(keywd)
 
 #### 유동인구 ####
 dong <- pop$AMD_CD %>% factor() %>% levels()
+
 dong
+ [1] "11110515" "11110530" "11110540" "11110550" "11110560" "11110570" "11110580" "11110600" "11110615" "11110630" "11110640" "11110650"
+[13] "11110670" "11110680" "11110690" "11110700" "11110710" "11140520" "11140540" "11140550" "11140570" "11140580" "11140590" "11140605"
+[25] "11140615" "11140625" "11140635" "11140645" "11140650" "11140665" "11140670" "11140680"
+
 code$SGG_NM[code$AMD_CD %in% dong] %>% unique() # 11110 = 종로구, 11140 = 중구
 code$AMD_NM[code$AMD_CD %in% dong] %>% unique() # 32개동
 code$AMD_NM[code$SGG_CD == '11110'] %>% unique() # 종로구 17개동
@@ -29,8 +34,16 @@ code$AMD_NM[code$SGG_CD == '11140'] %>% unique() # 중구 15개동
 moving <- aggregate(pop$total, list(substr(pop$AMD_CD,1,5), pop$AMD_CD, pop$etl_ymd), sum)
 moving <- as.data.frame(moving)
 class(moving)
-head(moving)
 colnames(moving) <- c('gu',' dong', 'date', 'pop')
+
+head(moving)
+     gu     dong     date    pop
+1 11110 11110515 20190601 374700
+2 11110 11110530 20190601 886582
+3 11110 11110540 20190601 254704
+4 11110 11110550 20190601 228704
+5 11110 11110560 20190601 356869
+6 11110 11110570 20190601 100682
 
 ggplot(moving, aes(x = date, y= pop, fill = factor(gu))) +
   geom_bar(stat = 'identity')
@@ -41,6 +54,7 @@ ggplot(moving, aes(x = date, y= pop, fill = factor(dong))) +
   geom_bar(stat = 'identity')
 ggplot(moving, aes(x = factor(dong), y= pop, fill = factor(date))) +
   geom_bar(stat = 'identity')
+
 
 #### 키워드 ####
 str(keywd)
@@ -74,7 +88,6 @@ use$long %>% as.factor() %>% levels
 
 ggplot(use, aes(x = wday(as.Date(as.character(use$activity_date), '%Y%m%d'), label = T), y = activity_count / 10000)) +
   geom_bar(stat= 'identity', position = 'stack')
-
-as.Date(as.character(use$activity_date), '%Y%m%d') %>% head()
+  
 
 #### bc카드 ####
