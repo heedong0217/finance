@@ -1,0 +1,66 @@
+import pandas as pd
+from pandas import DataFrame, Series
+import numpy as np
+
+mp = pd.read_excel("c:/data/망고플레이트_사용자 밀집도.xlsx",
+                        sheet_name = "데이터")
+mp                        
+mp.dropna()
+mp = mp.dropna()
+mp.dtypes
+
+mp['activity_date'] = mp['activity_date'].astype(int) #-- 소수점 제거
+mp['activity_date'] = mp['activity_date'].astype(str) #-- 문자형으로 만들어서 날짜포맷 모양을 만들어야함
+mp.info()
+
+mp['activity_date']
+mp['activity_date'] = mp['activity_date'].str.replace('201906','2019-06-')
+mp
+pd.to_datetime(mp['activity_date'])
+mp['activity_date'] = pd.to_datetime(mp['activity_date'])
+
+loc=mp.groupby(['lat','long'])['activity_count'].sum()
+loc
+
+df = DataFrame(loc)
+df
+
+df['activity_count'].max()
+df = df.sort_values(by='activity_count',ascending=False)
+df
+
+df = df.reset_index()
+df
+
+x = df['lat'].astype(str)
+y = df['long'].astype(str)
+
+print(x,y)
+
+z = x+' , '+y
+z
+z = DataFrame(z)
+z.columns = ['location']
+
+k = DataFrame(z.head(10))
+k
+j = DataFrame(df['activity_count'].head(10))
+j
+top10 = pd.concat([k,j],axis=1)
+top5 = top10.head(5)
+top5 
+
+# 37.514, 127.016 ==> 서울특별시 서초구 잠원동 나루터로10길 / 95501건
+# 37.518, 127.043 ==> 서울특별시 강남구 청담동 42번지 101동 1602호 / 43118건
+# 37.556,	126.923 ==> 서울특별시 마포구 서교동 양화로 / 38160건
+# 37.563,	126.985	==> 서울특별시 중구 명동2가 명동10길 16-1 / 35600건
+# 37.554,	126.923 ==> 서울특별시 마포구 서교동 홍익로 18 / 34418건
+
+import matplotlib.pylab as plt
+from matplotlib import font_manager, rc
+font_name = font_manager.FontProperties(fname="c:\windows/fonts/malgun.ttf").get_name()
+rc('font', family = font_name)
+
+
+plt.bar(top5['location'],top5['activity_count'],
+       color = ['red','blue','skyblue','lightblue','green'])
