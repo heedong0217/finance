@@ -1,0 +1,132 @@
+# 비씨카드 데이터
+BCcard <- read.csv("c:/data/금융빅데이터공모전_데이터/비씨카드.csv", header = T)
+str(BCcard)
+
+
+# 신용/체스 사용건수 비율
+# 파이차트
+library(plotrix)
+
+BC <- data.frame(BCcard$신용.체크.구분,BCcard$건수)
+BC <- tapply(BCcard$건수, BCcard$신용.체크.구분, sum)
+BC <- data.frame(t(t(BC)))
+colnames(BC) <- '건수'
+
+pie(BC$건수,main="신용/체크 사용건수 비율",
+    labels=paste0(round(BC$건수/sum(BC$건수)*100),'%'),
+    col=rainbow(length(rownames(BC))))
+legend("topleft",legend=rownames(BC),cex=1,fill=rainbow(length(rownames(BC))))
+
+
+# 업종별 연령대 신용/체크 사용량
+BC <- data.frame(BCcard$연령대,BCcard$신용.체크.구분,BCcard$건수)
+BC <- tapply(BCcard$건수, list(BC$BCcard.연령대,BC$BCcard.신용.체크.구분), sum)
+
+barplot(BC,names.arg=colnames(BC),
+        main="업종별 연령대 신용/체크 사용량",xlab='신용/체크',ylab='건수',
+        legend.text=rownames(BC),
+        beside=T)
+
+
+# 년월별 업종 판매건수
+BC <- tapply(BCcard$건수, list(BCcard$업종명,BCcard$매출년월), sum)
+
+barplot(BC,names.arg=colnames(BC),
+        main="년월별 업종 판매건수",xlab='년월',ylab='건수',
+        legend.text=rownames(BC),
+        beside=T)
+
+
+# 업종별 연령대 결제건수
+BC <- tapply(BCcard$건수, list(BCcard$연령대,BCcard$업종명), sum)
+
+barplot(BC,names.arg=colnames(BC),
+        main="업종별 연령대 결제건수",xlab='업종',ylab='총 건수',
+        legend.text=rownames(BC),
+        beside=T)
+
+
+# 성별 업종 결제 건수
+BC <- tapply(BCcard$건수, list(BCcard$성별,BCcard$업종명), sum)
+
+barplot(BC,names.arg=colnames(BC),
+        main="성별 업종 결제 건수",xlab='업종',ylab='건수',
+        legend.text=rownames(BC),
+        beside=T)
+
+
+# 지역구별 업종 결제 건수
+BC <- tapply(BCcard$건수, list(BCcard$지역.구.,BCcard$업종명), sum)
+
+barplot(BC,names.arg=colnames(BC),
+        main="지역구별 업종 결제 건수",xlab='업종',ylab='건수',
+        legend.text=rownames(BC),
+        beside=T)
+
+
+
+
+
+
+
+# KT 유동인구
+KT <- read.csv("c:/data/금융빅데이터공모전_데이터/KT_유동인구.csv", header = T)
+KT_code <- read_excel("c:/data/금융빅데이터공모전_데이터/KT_행정동_코드_데이터.xlsx",
+                      col_names = TRUE)
+KT <- merge(KT, KT_code, by.x='AMD_CD', by.y='AMD_CD', x.all=T)
+
+
+library(reshape2)
+library(ggplot2)
+
+# 구별 동별 유동인구
+KT_구 <- KT[which(KT$SGG_NM=='종로구'),]
+KT_구 <- data.frame(tapply(KT_구$total ,list(KT_구$etl_ymd,KT_구$AMD_NM), sum))
+rownames(KT_구) <- seq(1:30)
+KT_구$day <- rownames(KT_구)
+KT_구 <-melt(KT_구,value.name='day')
+colnames(KT_구) <- c('day','dong','count')
+KT_구$day <- as.integer(KT_구$day)
+
+
+ggplot(KT_구, aes(x=KT_구$'day', y=KT_구$`count`,
+                  colour=KT_구$'dong', group=KT_구$'dong'))+
+        geom_line(size=1)+
+        ggtitle("x구 동별 6월 유동인구")+
+        scale_x_continuous(breaks=seq(1,30,1))
+
+
+
+# 동별 남녀 유동인구
+library(gridExtra)
+
+KT_구 <- KT[which(KT$SGG_NM=='종로구'),]
+p <- list()
+
+dong_name<-data.frame(unique(KT_구$AMD_NM))
+colnames(dong_name)<-'dong'
+
+i <- 1
+
+while(i<length(xxx$dong)+1){
+    KT_구_x <- KT_구[which(KT_구$AMD_NM==dong_name$dong[i]),]
+    KT_구_x_m <- data.frame(tapply(KT_구_x$m_total , KT_구_x$etl_ymd, sum))
+    KT_구_x_w <- data.frame(tapply(KT_구_x$w_total , KT_구_x$etl_ymd, sum))
+    KT_구_x_mw <- cbind(KT_구_x_m, KT_구_x_w)
+    colnames(KT_구_x_mw) <- c('m','w')
+    rownames(KT_구_x_mw) <- seq(1,30)
+    
+    KT_구_x_mw$day <- rownames(KT_구_x_mw)
+    KT_구_x_mw <-melt(KT_구_x_mw,value.name='day')
+    KT_구_x_mw$day <- as.integer(KT_구_x_mw$day)
+    colnames(KT_구_x_mw) <- c('day','sex','count')
+    
+    p[[i]] <- ggplot(KT_구_x_mw, aes(x=day, y=count,
+                                      colour=sex, group=sex))+
+        geom_line(size=1)+
+        ggtitle(paste0("x구 ",dong_name$dong[i]," 6월 유동인구"))+
+        scale_x_continuous(breaks=seq(1,30,7))
+    i <- i+1
+}
+
+do.call(grid.arrange,p)
